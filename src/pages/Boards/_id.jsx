@@ -15,7 +15,7 @@ function Board() {
     fetchBoardDetailsAPI(boardId).then((board) => {
       setBoard(board)
     })
-  })
+  }, [])
   return (
     <Container disableGutters maxWidth="false" sx={{ height: '100vh' }}>
       <AppBar />
