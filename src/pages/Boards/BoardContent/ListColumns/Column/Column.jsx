@@ -220,6 +220,7 @@ function Column({ column }) {
                 type="text"
                 size="small"
                 variant="outlined"
+                data-no-dnd="true"
                 autoFocus
                 value={newCardTitle}
                 onChange={(e) => setNewCardTitle(e.target.value)}
@@ -259,6 +260,7 @@ function Column({ column }) {
                 <Button
                   onClick={addNewCard}
                   variant="contained"
+                  data-no-dnd="true"
                   color="success"
                   size="small"
                   sx={{
