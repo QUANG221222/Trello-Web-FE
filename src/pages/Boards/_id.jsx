@@ -8,7 +8,8 @@ import BoardContent from './BoardContent/BoardContent'
 import {
   fetchBoardDetailsAPI,
   createNewColumnAPI,
-  createNewCardAPI
+  createNewCardAPI,
+  updateBoardDetailsAPI
 } from '~/apis'
 import { generatePlaceholderCard } from '~/utils/formatters'
 import { isEmpty } from 'lodash'
@@ -73,6 +74,20 @@ function Board() {
     setBoard(newBoard)
   }
 
+  // //Func này có nhiệm vụ gọi API và xử lý khi kéo thả xong xuôi
+  const moveColumns = async (dndOrderedColumn) => {
+    // Update cho chuẩn dữ liệu state Board
+    const dndOrderedColumnIds = dndOrderedColumn.map((c) => c._id)
+    const newBoard = { ...board }
+    newBoard.columns = dndOrderedColumn
+    newBoard.columnOrderIds = dndOrderedColumnIds
+    setBoard(newBoard)
+
+    // Gọi API Update Board
+    await updateBoardDetailsAPI(newBoard._id, {
+      columnOrderIds: dndOrderedColumnIds
+    })
+  }
   return (
     <Container disableGutters maxWidth="false" sx={{ height: '100vh' }}>
       <AppBar />
@@ -81,6 +96,7 @@ function Board() {
         board={board}
         createNewColumn={createNewColumn}
         createNewCard={createNewCard}
+        moveColumns={moveColumns}
       />
     </Container>
   )
