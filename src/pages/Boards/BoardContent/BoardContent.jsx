@@ -31,7 +31,7 @@ const ACTIVE_DRAG_ITEM_TYPE = {
   CARD: 'ACTIVE_DRAG_ITEM_TYPE_CARD'
 }
 
-function BoardContent({ board, createNewColumn, createNewCard }) {
+function BoardContent({ board, createNewColumn, createNewCard, moveColumns }) {
   // https://docs.dndkit.com/api-documenta...
   // Nếu dùng pointerSensor mặc định thì phải kết hợp với thuộc tính css touch-action: none ở những phần tử kéo thả - nhưng mà còn bug
   // const pointerSensor = useSensor(PointerSensor, {
@@ -315,11 +315,16 @@ function BoardContent({ board, createNewColumn, createNewCard }) {
           newColumnIndex
         )
         // Dùng để xử lý gọi API
-        // const dndOrderedColumnIds = dndOrderedColumn.map((c) => c._id);
-        // console.log("dndOrderedColumn", dndOrderedColumn);
-        // console.log("dndOrderedColumnIds", dndOrderedColumnIds);
 
-        // Cập nhật lại state columns ban đầu sau khi kéo thả
+        /**
+         * Gọi lên props func moveColumns nằm ở component cha cao nhất (boards/_id.jsx)
+         * Lưu ý: về sau ở học phần MERN Stack Advanced nâng cao chúng ta sẽ đưa dữ liệu Board ra ngoài Redux Global Store
+         * Và lúc ;này chúng ta có thể gọi luôn API ở đây là xong thay vì phải lần lượt gọi ngược lên những component cha phía bên trên
+         * Với việc sử dụng Redux như vậy code sẽ Clean chuẩn chỉnh hơn rất nhiều
+         */
+        moveColumns(dndOrderedColumn)
+
+        // Vẫn gọi update State ở đây để tránh delay hoặc flickering giao diện lúc kéo thả cần phải chờ gọi API (small trick)
         setOrderedColumns(dndOrderedColumn)
       }
     }
