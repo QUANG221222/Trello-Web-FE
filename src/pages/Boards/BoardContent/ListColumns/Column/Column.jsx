@@ -18,7 +18,6 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever'
 import AddCardIcon from '@mui/icons-material/AddCard'
 import DragHandleIcon from '@mui/icons-material/DragHandle'
 import ListCards from './ListCards/ListCards'
-import { mapOrder } from '~/utils/sorts'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import TextField from '@mui/material/TextField'
@@ -57,14 +56,14 @@ function Column({ column, createNewCard }) {
     setAnchorEl(null)
   }
   // Sort Column
-  const orderedCard = mapOrder(column?.cards, column?.cardOrderIds, '_id')
+  const orderedCards = column.cards
   // Phải bọc div ở đầu vì vấn đề chiều cao của column khi kéo thả sẽ có bug kiểu flickering (video 32)
 
   const [openNewCardForm, setOpenNewCardForm] = useState(false)
   const toggleOpenNewCardForm = () => setOpenNewCardForm(!openNewCardForm)
 
   const [newCardTitle, setNewCardTitle] = useState('')
-  const addNewCard = async () => {
+  const addNewCard = () => {
     if (!newCardTitle) {
       toast.error('Please enter Card title', { position: 'bottom-right' })
       return
@@ -83,7 +82,7 @@ function Column({ column, createNewCard }) {
      * - Với việc sử dụng Redux như vậy thì code sẽ Clean chuẩn chỉnh hơn rất nhiều
      */
 
-    await createNewCard(newCardData)
+    createNewCard(newCardData)
 
     //Đóng trạng thái thêm Column mới & Clear input
     toggleOpenNewCardForm()
@@ -190,7 +189,7 @@ function Column({ column, createNewCard }) {
           </Box>
         </Box>
         {/*Box Column List Card */}
-        <ListCards cards={orderedCard} />
+        <ListCards cards={orderedCards} />
         {/*Box Column Footer */}
         <Box
           sx={{

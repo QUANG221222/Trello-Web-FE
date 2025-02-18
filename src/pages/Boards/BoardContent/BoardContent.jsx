@@ -1,6 +1,5 @@
 import Box from '@mui/material/Box'
 import ListColumns from './ListColumns/ListColumns'
-import { mapOrder } from '~/utils/sorts'
 import { generatePlaceholderCard } from '~/utils/formatters'
 import {
   DndContext,
@@ -31,7 +30,13 @@ const ACTIVE_DRAG_ITEM_TYPE = {
   CARD: 'ACTIVE_DRAG_ITEM_TYPE_CARD'
 }
 
-function BoardContent({ board, createNewColumn, createNewCard, moveColumns }) {
+function BoardContent({
+  board,
+  createNewColumn,
+  createNewCard,
+  moveColumns,
+  moveCardInTheSameColumn
+}) {
   // https://docs.dndkit.com/api-documenta...
   // Nếu dùng pointerSensor mặc định thì phải kết hợp với thuộc tính css touch-action: none ở những phần tử kéo thả - nhưng mà còn bug
   // const pointerSensor = useSensor(PointerSensor, {
@@ -64,12 +69,8 @@ function BoardContent({ board, createNewColumn, createNewCard, moveColumns }) {
   //Điểm va chạm cuối cùng(xử lý thuật toán phát hiện va chạm)
   const lastOverId = useRef(null)
   useEffect(() => {
-    const orderedColumns = mapOrder(
-      board?.columns,
-      board?.columnOrderIds,
-      '_id'
-    )
-    setOrderedColumns(orderedColumns)
+    // Columns đã được sắp xếp ở component cha cao nhât (board/_id.jsx) (video 71 đã giải thích lý do ở phần Fix bug quan trọng)
+    setOrderedColumns(board.columns)
   }, [board])
 
   //Tìm column theo cardId
@@ -278,6 +279,9 @@ function BoardContent({ board, createNewColumn, createNewCard, moveColumns }) {
           oldCardIndex,
           newCardIndex
         )
+        const dndOrderedCardIds = dndOrderedCard.map((card) => card._id)
+
+        // Vẫn gọi update State ở đây để tránh delay hoặc flickering giao diện lúc kéo thả cần phải chờ gọi API (small trick)
         setOrderedColumns((prevColumns) => {
           //Clone mảng OrderColumnsState cũ ra một cái mới để xử lý dữ liệu rồi return - cập nhật lại orderedColumnsState mới
           const nextColumns = cloneDeep(prevColumns)
@@ -287,11 +291,22 @@ function BoardContent({ board, createNewColumn, createNewCard, moveColumns }) {
           )
           //Cập nhật lại 2 giá trị mới là card và cardOrderIds trong cái tergetColumn
           targetColumn.cards = dndOrderedCard
-          targetColumn.cardOrderIds = dndOrderedCard.map((card) => card._id)
+          targetColumn.cardOrderIds = dndOrderedCardIds
           // console.log('targetColumn', targetColumn)
           //Trả về giá trị state mới sau khi kéo thả card (chuẩn vị trí)
           return nextColumns
         })
+        /**
+         * Gọi lên props func moveCardInTheSameColumn nằm ở component cha cao nhất (boards/_id.jsx)
+         * Lưu ý: về sau ở học phần MERN Stack Advanced nâng cao chúng ta sẽ đưa dữ liệu Board ra ngoài Redux Global Store
+         * Và lúc ;này chúng ta có thể gọi luôn API ở đây là xong thay vì phải lần lượt gọi ngược lên những component cha phía bên trên
+         * Với việc sử dụng Redux như vậy code sẽ Clean chuẩn chỉnh hơn rất nhiều
+         */
+        moveCardInTheSameColumn(
+          dndOrderedCard,
+          dndOrderedCardIds,
+          oldColumnWhenDraggingCard._id
+        )
       }
     }
 
@@ -314,8 +329,11 @@ function BoardContent({ board, createNewColumn, createNewCard, moveColumns }) {
           oldColumnIndex,
           newColumnIndex
         )
-        // Dùng để xử lý gọi API
 
+        // Vẫn gọi update State ở đây để tránh delay hoặc flickering giao diện lúc kéo thả cần phải chờ gọi API (small trick)
+        setOrderedColumns(dndOrderedColumn)
+
+        // Dùng để xử lý gọi API
         /**
          * Gọi lên props func moveColumns nằm ở component cha cao nhất (boards/_id.jsx)
          * Lưu ý: về sau ở học phần MERN Stack Advanced nâng cao chúng ta sẽ đưa dữ liệu Board ra ngoài Redux Global Store
@@ -323,9 +341,6 @@ function BoardContent({ board, createNewColumn, createNewCard, moveColumns }) {
          * Với việc sử dụng Redux như vậy code sẽ Clean chuẩn chỉnh hơn rất nhiều
          */
         moveColumns(dndOrderedColumn)
-
-        // Vẫn gọi update State ở đây để tránh delay hoặc flickering giao diện lúc kéo thả cần phải chờ gọi API (small trick)
-        setOrderedColumns(dndOrderedColumn)
       }
     }
 
