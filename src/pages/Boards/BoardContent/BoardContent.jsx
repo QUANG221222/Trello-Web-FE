@@ -35,7 +35,8 @@ function BoardContent({
   createNewColumn,
   createNewCard,
   moveColumns,
-  moveCardInTheSameColumn
+  moveCardInTheSameColumn,
+  moveCardToDiffrentColumn
 }) {
   // https://docs.dndkit.com/api-documenta...
   // Nếu dùng pointerSensor mặc định thì phải kết hợp với thuộc tính css touch-action: none ở những phần tử kéo thả - nhưng mà còn bug
@@ -81,7 +82,7 @@ function BoardContent({
     )
   }
 
-  //Function chung xử lí việc Cập nhật lại state trong trường hợp di chuyển card giữa các column khác nhau
+  //Khởi tạo Function chung xử lí việc Cập nhật lại state trong trường hợp di chuyển card giữa các column khác nhau
   const moveCardBetweenDifftentColumns = (
     overColumn,
     overCardId,
@@ -89,7 +90,8 @@ function BoardContent({
     over,
     activeColumn,
     activeDraggingCardId,
-    activeDraggingCardData
+    activeDraggingCardData,
+    triggerFrom
   ) => {
     setOrderedColumns((prevColums) => {
       //Tìm vị trị (index) của overcard trong column đích(nơi mà active card đang kéo qua)
@@ -162,6 +164,23 @@ function BoardContent({
         )
       }
 
+      // Nếu function này được gọi từ handleDragEnd nghĩa là đã kéo thả xong, lúc này mới xử lý gọi API 1 lần ở đây
+      if (triggerFrom === 'handleDragEnd') {
+        /**
+         * Gọi lên props func moveCardToDiffrentColumn nằm ở component cha cao nhất (boards/_id.jsx)
+         * Lưu ý: về sau ở học phần MERN Stack Advanced nâng cao chúng ta sẽ đưa dữ liệu Board ra ngoài Redux Global Store
+         * Và lúc này chúng ta có thể gọi luôn API ở đây là xong thay vì phải lần lượt gọi ngược lên những component cha phía bên trên
+         * Với việc sử dụng Redux như vậy code sẽ Clean chuẩn chỉnh hơn rất nhiều
+         */
+        // Phải dùng tới activeDragItemData.columnId hoặc tốt nhất là oldColumnWhenDraggingCard._id(set vào state từ bước handleDragStart) chứ không phải activeData trong scope handleDragEnd vì sau khi đi qua onDragOver thì state của card đã bị cập nhật 1 lần rồi.
+        moveCardToDiffrentColumn(
+          activeDraggingCardId,
+          oldColumnWhenDraggingCard._id,
+          nextOverColumn._id,
+          nextColumns
+        )
+      }
+
       //Trả về danh sách board mới
       return nextColumns
     })
@@ -220,7 +239,8 @@ function BoardContent({
         over,
         activeColumn,
         activeDraggingCardId,
-        activeDraggingCardData
+        activeDraggingCardData,
+        'handleDragOver'
       )
     }
   }
@@ -261,7 +281,8 @@ function BoardContent({
           over,
           activeColumn,
           activeDraggingCardId,
-          activeDraggingCardData
+          activeDraggingCardData,
+          'handleDragEnd'
         )
       } else {
         //Hành động kéo thả card trong cùng 1 column
